@@ -17,12 +17,12 @@
 #define kFlatDatePickerBackgroundColorButtonValid [UIColor colorWithRed:51.0/255.0 green:181.0/255.0 blue:229.0/255.0 alpha:1.0]
 #define kFlatDatePickerBackgroundColorButtonCancel [UIColor colorWithRed:58.0/255.0 green:58.0/255.0 blue:58.0/255.0 alpha:1.0]
 #define kFlatDatePickerBackgroundColorScrolView [UIColor colorWithRed:34.0/255.0 green:34.0/255.0 blue:34.0/255.0 alpha:1.0]
-#define kFlatDatePickerBackgroundColorLines [UIColor colorWithRed:51.0/255.0 green:181.0/255.0 blue:229.0/255.0 alpha:1.0]
+#define kFlatDatePickerBackgroundColorLines [UIColor colorWithRed:189.0/255.0 green:47.0/255.0 blue:50.0/255.0 alpha:1.0]
 
 // Constants fonts colors :
 #define kFlatDatePickerFontColorTitle [UIColor colorWithRed:255.0/255.0 green:255.0/255.0 blue:255.0/255.0 alpha:1.0]
-#define kFlatDatePickerFontColorLabel [UIColor colorWithRed:255.0/255.0 green:255.0/255.0 blue:255.0/255.0 alpha:1.0]
-#define kFlatDatePickerFontColorLabelSelected [UIColor colorWithRed:51.0/255.0 green:181.0/255.0 blue:229.0/255.0 alpha:1.0]
+#define kFlatDatePickerFontColorLabel [UIColor colorWithRed:189.0/255.0 green:47.0/255.0 blue:50.0/255.0 alpha:1.0]
+#define kFlatDatePickerFontColorLabelSelected [UIColor colorWithRed:189.0/255.0 green:47.0/255.0 blue:50.0/255.0 alpha:1.0]
 
 // Constants sizes :
 #define kFlatDatePickerHeight 260
@@ -30,7 +30,8 @@
 #define kFlatDatePickerButtonHeaderWidth 44
 #define kFlatDatePickerHeaderBottomMargin 1
 #define kFlatDatePickerScrollViewDaysWidth 90
-#define kFlatDatePickerScrollViewMonthWidth 140
+#define kFlatDatePickerScrollViewMonthWidth 90
+#define kFlatDatePickerScrollViewYearWidth 140
 #define kFlatDatePickerScrollViewDateWidth 165
 #define kFlatDatePickerScrollViewLeftMargin 1
 #define kFlatDatePickerScrollViewItemHeight 45
@@ -47,7 +48,7 @@
 #define kFlatDatePickerIconValid @"FlatDatePicker-Icon-Check.png"
 
 // Constants :
-#define kStartYear 1900
+#define kStartYear 2013
 #define TAG_DAYS 1
 #define TAG_MONTHS 2
 #define TAG_YEARS 3
@@ -57,7 +58,7 @@
 #define TAG_DATES 7
 
 @interface FlatDatePicker ()
-
+@property (strong, nonatomic) UILabel *colonLabel;
 - (void)setupControl;
 
 - (void)buildHeader;
@@ -130,9 +131,8 @@
 
 -(id)initWithFrame:(CGRect)frame {
     
-    if ([super initWithFrame:frame]) {
-        _datePickerMode = FlatDatePickerModeDate;
-        [self setupControl];
+    if (self = [super initWithFrame:frame]) {
+
     }
     return self;
 }
@@ -141,18 +141,13 @@
     
     _parentView = parentView;
     
-    if ([self initWithFrame:CGRectMake(0.0, _parentView.frame.size.height, _parentView.frame.size.width, kFlatDatePickerHeight)]) {
-        _datePickerMode = FlatDatePickerModeDate;
+    if ([self initWithFrame:CGRectMake(0.0, -30.0, _parentView.frame.size.width, kFlatDatePickerHeight)]) {
         [_parentView addSubview:self];
-        [self setupControl];
     }
     return self;
 }
 
 -(void)setupControl {
-    
-    // Set parent View :
-    self.hidden = YES;
     
     // Clear old selectors
     [self removeSelectorYears];
@@ -160,18 +155,18 @@
     [self removeSelectorDays];
     [self removeSelectorHours];
     [self removeSelectorMinutes];
-    [self removeSelectorSeconds];
+//    [self removeSelectorSeconds];
 
     // Default parameters :
     self.calendar = [NSCalendar currentCalendar];
     self.locale = [NSLocale currentLocale];
-    self.timeZone = nil;
+    self.timeZone = [NSTimeZone localTimeZone];
 
     // Background :
-    self.backgroundColor = kFlatDatePickerBackgroundColor;
+    self.backgroundColor = self.customBackgroundColor;
     
     // Header DatePicker :
-    [self buildHeader];
+//    [self buildHeader];
 
     // Date Selectors :
     if (self.datePickerMode == FlatDatePickerModeDate) {
@@ -180,9 +175,9 @@
         _months = [self getMonths];
         _days = [self getDaysInMonth:[NSDate date]];
         
-        [self buildSelectorDaysOffsetX:0.0 andWidth:kFlatDatePickerScrollViewDaysWidth];
-        [self buildSelectorMonthsOffsetX:(_scollViewDays.frame.size.width + kFlatDatePickerScrollViewLeftMargin) andWidth:kFlatDatePickerScrollViewMonthWidth];
-        [self buildSelectorYearsOffsetX:(_scollViewMonths.frame.origin.x + _scollViewMonths.frame.size.width + kFlatDatePickerScrollViewLeftMargin) andWidth:(self.frame.size.width - (_scollViewMonths.frame.origin.x + _scollViewMonths.frame.size.width + kFlatDatePickerScrollViewLeftMargin))];
+        [self buildSelectorYearsOffsetX:0.0 andWidth:kFlatDatePickerScrollViewYearWidth];
+        [self buildSelectorMonthsOffsetX:kFlatDatePickerScrollViewYearWidth andWidth:kFlatDatePickerScrollViewMonthWidth];
+        [self buildSelectorDaysOffsetX:(kFlatDatePickerScrollViewYearWidth+kFlatDatePickerScrollViewMonthWidth) andWidth:kFlatDatePickerScrollViewDaysWidth];
     }
     
     // Time Selectors :
@@ -190,11 +185,13 @@
         
         _hours = [self getHours];
         _minutes = [self getMinutes];
-        _seconds = [self getSeconds];
+//        _seconds = [self getSeconds];
 
-        [self buildSelectorHoursOffsetX:0.0 andWidth:((self.frame.size.width / 3.0) - kFlatDatePickerScrollViewLeftMargin)];
-        [self buildSelectorMinutesOffsetX:(self.frame.size.width / 3.0) andWidth:((self.frame.size.width / 3.0) - kFlatDatePickerScrollViewLeftMargin)];
-        [self buildSelectorSecondsOffsetX:((self.frame.size.width / 3.0) * 2.0) andWidth:(self.frame.size.width / 3.0)];
+        [self buildSelectorHoursOffsetX:(0.5 * self.frame.size.width / 3.0) andWidth:((self.frame.size.width / 3.0) - kFlatDatePickerScrollViewLeftMargin)];
+        [self buildSelectorMinutesOffsetX:(1.5 * self.frame.size.width / 3.0) andWidth:((self.frame.size.width / 3.0) - kFlatDatePickerScrollViewLeftMargin)];
+//        [self buildSelectorSecondsOffsetX:((self.frame.size.width / 3.0) * 2.0) andWidth:(self.frame.size.width / 3.0)];
+
+        [self addSubview:self.colonLabel];
     }
     
     // Date & Time Selectors :
@@ -211,6 +208,22 @@
 
     // Defaut Date selected :
     [self setDate:[NSDate date] animated:NO];
+    
+}
+
+#pragma mark - Colon Label
+- (UILabel *)colonLabel
+{
+    if (!_colonLabel) {
+        _colonLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 20, 30)];
+        _colonLabel.backgroundColor = [UIColor clearColor];
+        _colonLabel.textColor = kFlatDatePickerFontColorLabel;
+        _colonLabel.font = [UIFont fontWithName:@"Helvetica" size:24];
+        _colonLabel.text = @":";
+        _colonLabel.frame = CGRectMake((self.bounds.size.width-20)/2, (self.bounds.size.height-52)/2, 20, 30);
+        _colonLabel.textAlignment = NSTextAlignmentCenter;
+    }
+    return _colonLabel;
 }
 
 #pragma mark - Build Header View
@@ -246,10 +259,10 @@
 - (void)buildSelectorDaysOffsetX:(CGFloat)x andWidth:(CGFloat)width {
     
     // ScrollView Days :
-    _scollViewDays = [[UIScrollView alloc] initWithFrame:CGRectMake(x, kFlatDatePickerHeaderHeight + kFlatDatePickerHeaderBottomMargin, width, self.frame.size.height - kFlatDatePickerHeaderHeight - kFlatDatePickerHeaderBottomMargin)];
+    _scollViewDays = [[UIScrollView alloc] initWithFrame:CGRectMake(x, kFlatDatePickerHeaderHeight + kFlatDatePickerHeaderBottomMargin, width, self.frame.size.height - 2.5 * kFlatDatePickerHeaderHeight - kFlatDatePickerHeaderBottomMargin)];
     _scollViewDays.tag = TAG_DAYS;
     _scollViewDays.delegate = self;
-    _scollViewDays.backgroundColor = kFlatDatePickerBackgroundColorScrolView;
+    _scollViewDays.backgroundColor = [UIColor clearColor];
     _scollViewDays.showsHorizontalScrollIndicator = NO;
     _scollViewDays.showsVerticalScrollIndicator = NO;
     [self addSubview:_scollViewDays];
@@ -323,10 +336,10 @@
     
     // ScrollView Months
     
-    _scollViewMonths = [[UIScrollView alloc] initWithFrame:CGRectMake(x, kFlatDatePickerHeaderHeight + kFlatDatePickerHeaderBottomMargin, width, self.frame.size.height - kFlatDatePickerHeaderHeight - kFlatDatePickerHeaderBottomMargin)];
+    _scollViewMonths = [[UIScrollView alloc] initWithFrame:CGRectMake(x, kFlatDatePickerHeaderHeight + kFlatDatePickerHeaderBottomMargin, width, self.frame.size.height - 2.5 * kFlatDatePickerHeaderHeight - kFlatDatePickerHeaderBottomMargin)];
     _scollViewMonths.tag = TAG_MONTHS;
     _scollViewMonths.delegate = self;
-    _scollViewMonths.backgroundColor = kFlatDatePickerBackgroundColorScrolView;
+    _scollViewMonths.backgroundColor = [UIColor clearColor];
     _scollViewMonths.showsHorizontalScrollIndicator = NO;
     _scollViewMonths.showsVerticalScrollIndicator = NO;
     [self addSubview:_scollViewMonths];
@@ -351,7 +364,7 @@
 
 - (void)buildSelectorLabelsMonths {
     
-    CGFloat offsetContentScrollView = (_scollViewDays.frame.size.height - kFlatDatePickerScrollViewItemHeight) / 2.0;
+    CGFloat offsetContentScrollView = (_scollViewMonths.frame.size.height - kFlatDatePickerScrollViewItemHeight) / 2.0;
     
     if (_labelsMonths != nil && _labelsMonths.count > 0) {
         for (UILabel *label in _labelsMonths) {
@@ -400,11 +413,10 @@
 - (void)buildSelectorYearsOffsetX:(CGFloat)x andWidth:(CGFloat)width {
     
     // ScrollView Years
-    
-    _scollViewYears = [[UIScrollView alloc] initWithFrame:CGRectMake(x, kFlatDatePickerHeaderHeight + kFlatDatePickerHeaderBottomMargin, width, self.frame.size.height - kFlatDatePickerHeaderHeight - kFlatDatePickerHeaderBottomMargin)];
+    _scollViewYears = [[UIScrollView alloc] initWithFrame:CGRectMake(x, kFlatDatePickerHeaderHeight + kFlatDatePickerHeaderBottomMargin, width, self.frame.size.height - 2.5 * kFlatDatePickerHeaderHeight - kFlatDatePickerHeaderBottomMargin)];
     _scollViewYears.tag = TAG_YEARS;
     _scollViewYears.delegate = self;
-    _scollViewYears.backgroundColor = kFlatDatePickerBackgroundColorScrolView;
+    _scollViewYears.backgroundColor = [UIColor clearColor];
     _scollViewYears.showsHorizontalScrollIndicator = NO;
     _scollViewYears.showsVerticalScrollIndicator = NO;
     [self addSubview:_scollViewYears];
@@ -428,7 +440,7 @@
 
 - (void)buildSelectorLabelsYears {
     
-    CGFloat offsetContentScrollView = (_scollViewDays.frame.size.height - kFlatDatePickerScrollViewItemHeight) / 2.0;
+    CGFloat offsetContentScrollView = (_scollViewYears.frame.size.height - kFlatDatePickerScrollViewItemHeight) / 2.0;
 
     if (_labelsYears != nil && _labelsYears.count > 0) {
         for (UILabel *label in _labelsYears) {
@@ -561,10 +573,11 @@
 - (void)buildSelectorHoursOffsetX:(CGFloat)x andWidth:(CGFloat)width {
 
     // ScrollView Hours :
-    _scollViewHours = [[UIScrollView alloc] initWithFrame:CGRectMake(x, kFlatDatePickerHeaderHeight + kFlatDatePickerHeaderBottomMargin, width, self.frame.size.height - kFlatDatePickerHeaderHeight - kFlatDatePickerHeaderBottomMargin)];
+    _scollViewHours = [[UIScrollView alloc] initWithFrame:CGRectMake(x, kFlatDatePickerHeaderHeight + kFlatDatePickerHeaderBottomMargin, width, self.frame.size.height - 2.5 * kFlatDatePickerHeaderHeight - kFlatDatePickerHeaderBottomMargin)];
     _scollViewHours.tag = TAG_HOURS;
     _scollViewHours.delegate = self;
-    _scollViewHours.backgroundColor = kFlatDatePickerBackgroundColorScrolView;
+//    _scollViewHours.backgroundColor = kFlatDatePickerBackgroundColorScrolView;
+    _scollViewHours.backgroundColor = [UIColor clearColor];
     _scollViewHours.showsHorizontalScrollIndicator = NO;
     _scollViewHours.showsVerticalScrollIndicator = NO;
     [self addSubview:_scollViewHours];
@@ -637,10 +650,11 @@
 - (void)buildSelectorMinutesOffsetX:(CGFloat)x andWidth:(CGFloat)width {
     
     // ScrollView Minutes :
-    _scollViewMinutes = [[UIScrollView alloc] initWithFrame:CGRectMake(x, kFlatDatePickerHeaderHeight + kFlatDatePickerHeaderBottomMargin, width, self.frame.size.height - kFlatDatePickerHeaderHeight - kFlatDatePickerHeaderBottomMargin)];
+    _scollViewMinutes = [[UIScrollView alloc] initWithFrame:CGRectMake(x, kFlatDatePickerHeaderHeight + kFlatDatePickerHeaderBottomMargin, width, self.frame.size.height - 2.5 * kFlatDatePickerHeaderHeight - kFlatDatePickerHeaderBottomMargin)];
     _scollViewMinutes.tag = TAG_MINUTES;
     _scollViewMinutes.delegate = self;
-    _scollViewMinutes.backgroundColor = kFlatDatePickerBackgroundColorScrolView;
+//    _scollViewMinutes.backgroundColor = kFlatDatePickerBackgroundColorScrolView;
+    _scollViewMinutes.backgroundColor = [UIColor clearColor];
     _scollViewMinutes.showsHorizontalScrollIndicator = NO;
     _scollViewMinutes.showsVerticalScrollIndicator = NO;
     [self addSubview:_scollViewMinutes];
@@ -839,8 +853,8 @@
             int indexMinutes = [self getIndexForScrollViewPosition:_scollViewMinutes];
             [self highlightLabelInArray:_labelsMinutes atIndex:indexMinutes];
             
-            int indexSeconds = [self getIndexForScrollViewPosition:_scollViewSeconds];
-            [self highlightLabelInArray:_labelsSeconds atIndex:indexSeconds];
+//            int indexSeconds = [self getIndexForScrollViewPosition:_scollViewSeconds];
+//            [self highlightLabelInArray:_labelsSeconds atIndex:indexSeconds];
         }
         
         [UIView beginAnimations:@"FlatDatePickerShow" context:nil];
@@ -936,7 +950,7 @@
         componentsMax = [self.calendar components:NSYearCalendarUnit|NSMonthCalendarUnit|NSDayCalendarUnit fromDate:[NSDate date]];
         yearMax = [componentsMax year];
     }
-
+    yearMax = kStartYear+10;
     for (int i = yearMin; i <= yearMax; i++) {
         
         [years addObject:[NSString stringWithFormat:@"%d", i]];
@@ -962,7 +976,7 @@
         NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
         if (self.timeZone != nil) [dateFormatter setTimeZone:self.timeZone];
         [dateFormatter setLocale:self.locale];
-        [formatter setDateFormat:@"MMMM"];
+        [formatter setDateFormat:@"MM"];
         NSString *stringFromDate = [formatter stringFromDate:myDate];
         
         [months addObject:stringFromDate];
@@ -986,7 +1000,7 @@
     [dateComponents setYear:kStartYear];
     
     NSDate *yearMin = [dateComponents date];
-    NSDate *yearMax = [NSDate date];
+    NSDate *yearMax = [NSDate dateWithTimeInterval:86400*365*5 sinceDate:[NSDate date]];
     
     NSInteger timestampMin = [yearMin timeIntervalSince1970];
     NSInteger timestampMax = [yearMax timeIntervalSince1970];
@@ -1233,7 +1247,7 @@
     } else if (scrollView.tag == TAG_MINUTES) {
         [self highlightLabelInArray:_labelsMinutes atIndex:index];
     } else if (scrollView.tag == TAG_SECONDS) {
-        [self highlightLabelInArray:_labelsSeconds atIndex:index];
+//        [self highlightLabelInArray:_labelsSeconds atIndex:index];
     } else if (scrollView.tag == TAG_DATES) {
         [self highlightLabelInArray:_labelsDates atIndex:index];
     }
@@ -1288,7 +1302,7 @@
     } else if (scrollView.tag == TAG_MINUTES) {
         _selectedMinute = index; // 0 to 59
     } else if (scrollView.tag == TAG_SECONDS) {
-        _selectedSecond = index; // 0 to 59
+//        _selectedSecond = index; // 0 to 59
     } else if (scrollView.tag == TAG_DATES) {
         _selectedDate = index;
     }
@@ -1398,7 +1412,7 @@
         if (self.datePickerMode == FlatDatePickerModeTime) {
             [self setScrollView:_scollViewHours atIndex:_selectedHour animated:animated];
             [self setScrollView:_scollViewMinutes atIndex:_selectedMinute animated:animated];
-            [self setScrollView:_scollViewSeconds atIndex:_selectedSecond animated:animated];
+//            [self setScrollView:_scollViewSeconds atIndex:_selectedSecond animated:animated];
         }
         
         if (self.datePickerMode == FlatDatePickerModeDateAndTime) {
@@ -1452,6 +1466,7 @@
     if (self.datePickerMode == FlatDatePickerModeTime) {
 
         dateComponents = [self.calendar components:NSYearCalendarUnit|NSMonthCalendarUnit|NSDayCalendarUnit fromDate:[NSDate date]];
+        dateComponents.calendar = self.calendar;
         [dateComponents setTimeZone:self.timeZone];
         [dateComponents setHour:hours];
         [dateComponents setMinute:minutes];
@@ -1472,14 +1487,7 @@
 }
 
 - (NSDate*)getDate {
-    
-    NSDate *selectedDate = nil;
-    
-    if (_dates.count > 0 && _selectedDate >= 0 && _selectedDate < _dates.count) {
-        selectedDate = (NSDate*)[_dates objectAtIndex:_selectedDate];
-    }
-    
-    return [self convertToDateDay:_selectedDay month:_selectedMonth year:_selectedYear hours:_selectedHour minutes:_selectedMinute seconds:_selectedSecond date:selectedDate];
+    return [self convertToDateDay:_selectedDay month:_selectedMonth year:_selectedYear hours:_selectedHour minutes:_selectedMinute seconds:_selectedSecond date:[NSDate date]];
 }
 
 @end

@@ -106,7 +106,7 @@ typedef NS_ENUM(NSInteger, FlatDatePickerMode) {
 }
 
 @property (nonatomic, strong) NSObject<FlatDatePickerDelegate> *delegate;
-
+@property (nonatomic, strong) UIColor *customBackgroundColor;
 @property(nonatomic) FlatDatePickerMode datePickerMode;           // default is UIDatePickerModeDate
 
 @property(nonatomic,retain) NSLocale      *locale;                // default is [NSLocale currentLocale]. setting nil returns to default
@@ -145,6 +145,8 @@ typedef NS_ENUM(NSInteger, FlatDatePickerMode) {
 
 - (void)setDate:(NSDate *)date animated:(BOOL)animated;
 - (NSDate*)getDate;
+
+- (void)setupControl;
 
 @end
 
